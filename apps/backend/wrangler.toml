@@ -7,10 +7,9 @@ compatibility_flags = ["nodejs_compat"]
 binding = "SESSIONS"
 id = "32b9d15a04c947f3a8e77676e730eca4"
 
-# [[r2_buckets]]
-# binding = "FILES"
-# bucket_name = "arc6assistant-files"
-# Uncomment after enabling R2 in Cloudflare Dashboard → Storage & Databases → R2
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "arc6assistant-files"
 
 [vars]
 # Non-secret configuration
