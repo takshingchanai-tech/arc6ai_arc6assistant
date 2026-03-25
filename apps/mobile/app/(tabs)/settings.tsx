@@ -18,7 +18,7 @@ export default function SettingsScreen(): JSX.Element {
   }
 
   const handleReset = async (): Promise<void> => {
-    const defaultUrl = 'https://arc6assistant.workers.dev'
+    const defaultUrl = 'https://arc6assistant.takshingchanai.workers.dev'
     setDraft(defaultUrl)
     await setApiUrl(defaultUrl)
     setSaved(true)
@@ -36,7 +36,7 @@ export default function SettingsScreen(): JSX.Element {
           value={draft}
           onChangeText={setDraft}
           style={styles.input}
-          placeholder="https://arc6assistant.workers.dev"
+          placeholder="https://arc6assistant.takshingchanai.workers.dev"
           placeholderTextColor="#9CA3AF"
           autoCapitalize="none"
           autoCorrect={false}

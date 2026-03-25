@@ -10,7 +10,7 @@ export interface ChatMessage {
   isStreaming?: boolean
 }
 
-const DEFAULT_API_URL = 'https://arc6assistant.workers.dev'
+const DEFAULT_API_URL = 'https://arc6assistant.takshingchanai.workers.dev'
 
 export function useChat(apiUrl?: string) {
   const url = apiUrl || DEFAULT_API_URL
