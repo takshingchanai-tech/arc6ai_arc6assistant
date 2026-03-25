@@ -1,4 +1,20 @@
 import { useCallback, useRef } from 'react'
+
+function getMimeType(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  const types: Record<string, string> = {
+    pdf: 'application/pdf',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    xls: 'application/vnd.ms-excel',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+  }
+  return types[ext ?? ''] || 'application/octet-stream'
+}
 import { useChat } from '../hooks/useChat.js'
 import { useFileUpload } from '../hooks/useFileUpload.js'
 import MessageList from './MessageList.js'
@@ -20,7 +36,11 @@ export default function ChatWindow({ apiUrl }: Props): JSX.Element {
 
   const handleFileDrop = useCallback(
     async (file: File) => {
-      await uploadFile(file)
+      // Ensure MIME type is set even for drag-dropped files
+      const typed = file.type
+        ? file
+        : new File([file], file.name, { type: getMimeType(file.name) })
+      await uploadFile(typed)
     },
     [uploadFile]
   )
@@ -29,7 +49,7 @@ export default function ChatWindow({ apiUrl }: Props): JSX.Element {
     const result = await window.arc6.openFile()
     if (!result) return
 
-    const file = new File([result.buffer], result.name)
+    const file = new File([result.buffer], result.name, { type: getMimeType(result.name) })
     await uploadFile(file)
   }, [uploadFile])
 

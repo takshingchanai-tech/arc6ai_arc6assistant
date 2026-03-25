@@ -7,13 +7,20 @@ arc6assistant is an AI assistant product by Arc6AI. It consists of:
 - **Backend** (`apps/backend`): Cloudflare Workers API
 - **Shared library** (`packages/shared`): TypeScript types + ApiClient used by all apps
 
+## Live Deployment
+- **Worker URL:** `https://arc6assistant.takshingchanai.workers.dev`
+- **KV namespace:** `32b9d15a04c947f3a8e77676e730eca4` (binding: `SESSIONS`)
+- **R2 bucket:** `arc6assistant-files` (binding: `FILES`)
+- **Auto-deploy:** Cloudflare Git integration — pushes to `main` auto-deploy the Worker
+- **Secrets set:** `OPENAI_API_KEY` (via Cloudflare Dashboard)
+
 ## Tech Stack
 - Language: TypeScript throughout
 - LLM: OpenAI API (`gpt-4o`) via Chat Completions with streaming
-- File storage: Cloudflare R2
+- File storage: Cloudflare R2 (`arc6assistant-files` bucket)
 - Session storage: Cloudflare KV
-- Web search: Brave Search API
-- Desktop: Electron + electron-vite + React 18
+- Web search: Brave Search API (set `BRAVE_SEARCH_API_KEY` secret when ready)
+- Desktop: Electron + electron-vite + `@electron-toolkit/utils` + React 18 + Tailwind
 - Mobile: Expo SDK 52 + Expo Router
 - Monorepo: npm workspaces
 
@@ -32,23 +39,23 @@ npm run dev:desktop
 # Mobile (Expo) — opens QR code for Expo Go
 npm run dev:mobile
 
-# Deploy backend to Cloudflare
+# Deploy backend to Cloudflare manually
 npm run deploy:backend
 ```
 
-## Backend Setup (one-time)
+## Backend Setup (already done — for reference only)
 ```bash
 cd apps/backend
 
-# Create KV namespace and update wrangler.toml with the ID
+# KV namespace — ID already set in wrangler.toml
 wrangler kv:namespace create SESSIONS
 
-# Create R2 bucket
+# R2 bucket — already created
 wrangler r2 bucket create arc6assistant-files
 
-# Set secrets
+# Secrets — OPENAI_API_KEY already set via Cloudflare Dashboard
 wrangler secret put OPENAI_API_KEY
-wrangler secret put BRAVE_SEARCH_API_KEY
+wrangler secret put BRAVE_SEARCH_API_KEY  # set when Brave Search is needed
 ```
 
 ## Architecture & Key Patterns
@@ -64,6 +71,8 @@ Clients read with `response.body.getReader()` — no SSE parsing needed.
 | PDF / DOCX | Upload to OpenAI Files API → store `file_id` → reference in chat |
 | XLSX / XLS | SheetJS parse in Worker → CSV text appended to message |
 | Images | Base64 inline `image_url` content part (vision) |
+
+**Important:** File MIME type must be explicitly set when creating `File` objects in the desktop renderer. Use `getMimeType(fileName)` helper in `ChatWindow.tsx` — do not create `new File([buffer], name)` without the `{ type }` option or the backend will reject with "unsupported file type".
 
 ### Tool Calling
 The `/chat` route uses OpenAI function calling with two tools:
@@ -110,6 +119,11 @@ arc6assistant/
     └── shared/         # Types + ApiClient + streamChat()
 ```
 
+## Known Issues Fixed
+- `@electron-toolkit/utils` must be in `dependencies` (not devDependencies) — required at runtime by main process
+- File MIME type must be set explicitly in desktop renderer when creating File objects from IPC buffers
+- `electron-vite` requires `vite@^5` — do not upgrade to vite 6
+
 ## Code Conventions
 - Follow existing patterns in `arc6bot_basic` for any Worker changes
 - All Worker endpoints must include CORS headers (use helpers from `lib/cors.ts`)
@@ -121,10 +135,16 @@ arc6assistant/
 Per company policy: run tests and check logs until every new function works properly.
 
 ```bash
-# Backend: test streaming
-curl -X POST http://localhost:8787/chat \
+# Test live Worker endpoints
+curl -X POST https://arc6assistant.takshingchanai.workers.dev/sessions \
+  -H "Content-Type: application/json" -d '{}'
+
+curl -X POST https://arc6assistant.takshingchanai.workers.dev/chat \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"hello"}]}'
+
+# Watch live Worker logs
+npx wrangler tail arc6assistant --format pretty
 
 # TypeScript check
 cd apps/backend && npx tsc --noEmit

@@ -9,6 +9,15 @@ An AI assistant desktop and mobile app by [Arc6AI](https://arc6ai.com). Availabl
 - **Web search** — Real-time internet search via Brave Search
 - **Generate files** — Export AI responses as Word documents, Excel spreadsheets, or PDFs
 
+## Live Backend
+
+| Resource | Details |
+|----------|---------|
+| Worker URL | `https://arc6assistant.takshingchanai.workers.dev` |
+| KV (sessions) | `arc6assistant` / `SESSIONS` namespace |
+| R2 (files) | `arc6assistant-files` bucket |
+| Auto-deploy | Cloudflare Git integration on push to `main` |
+
 ## Project Structure
 
 ```
@@ -40,7 +49,6 @@ arc6assistant/
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) (`npm install -g wrangler`)
 - A Cloudflare account
 - OpenAI API key
-- Brave Search API key
 
 ### 1. Clone and install
 
@@ -50,24 +58,7 @@ cd arc6ai_arc6assistant
 npm install
 ```
 
-### 2. Set up the backend
-
-```bash
-cd apps/backend
-
-# Create KV namespace for sessions
-wrangler kv:namespace create SESSIONS
-# → Copy the returned ID into wrangler.toml under [[kv_namespaces]]
-
-# Create R2 bucket for file storage
-wrangler r2 bucket create arc6assistant-files
-
-# Set API key secrets
-wrangler secret put OPENAI_API_KEY
-wrangler secret put BRAVE_SEARCH_API_KEY
-```
-
-### 3. Run locally
+### 2. Run locally
 
 ```bash
 # Terminal 1 — Backend (localhost:8787)
@@ -80,20 +71,19 @@ npm run dev:desktop
 npm run dev:mobile
 ```
 
-### 4. Deploy backend
+### 3. Deploy backend
 
+Push to `main` — Cloudflare Git integration auto-deploys the Worker.
+
+Or deploy manually:
 ```bash
 npm run deploy:backend
-# → Note your Worker URL: https://arc6assistant.<your-account>.workers.dev
 ```
-
-Update the `VITE_API_URL` in `apps/desktop` or use the **Settings** screen in the mobile app to point to your deployed Worker URL.
 
 ## Building for Distribution
 
 **Desktop:**
 ```bash
-npm run build:desktop              # all platforms
 npm -w apps/desktop run package:mac    # macOS DMG
 npm -w apps/desktop run package:win    # Windows installer
 npm -w apps/desktop run package:linux  # Linux AppImage
@@ -109,12 +99,10 @@ eas build --platform android
 
 ## API Reference
 
-All endpoints are on the Cloudflare Worker:
-
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/chat` | Streaming chat (plain text chunks) |
-| `POST` | `/upload` | Upload file for analysis |
+| `POST` | `/upload` | Upload file for analysis (PDF, DOCX, XLSX, images) |
 | `POST` | `/search` | Web search via Brave |
 | `POST` | `/generate` | Generate DOCX / XLSX / PDF |
 | `GET` | `/download/:id` | Download a generated file |
