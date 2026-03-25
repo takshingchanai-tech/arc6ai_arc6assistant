@@ -1,0 +1,16 @@
+{
+  "name": "arc6assistant",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm -w apps/backend run dev",
+    "dev:desktop": "npm -w apps/desktop run dev",
+    "dev:mobile": "npm -w apps/mobile run start",
+    "deploy:backend": "npm -w apps/backend run deploy",
+    "build:desktop": "npm -w apps/desktop run build",
+    "build:shared": "npm -w packages/shared run build"
+  }
+}

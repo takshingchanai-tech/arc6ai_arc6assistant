@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.wrangler/
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+out/
+release/
+.expo/
