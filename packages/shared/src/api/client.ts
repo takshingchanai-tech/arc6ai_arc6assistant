@@ -38,7 +38,7 @@ export class ApiClient {
       body: JSON.stringify({ ...request, sessionId: this.sessionId }),
     })
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     return res.body!
@@ -54,7 +54,7 @@ export class ApiClient {
       body: formData,
     })
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     return res.json() as Promise<UploadResponse>
@@ -68,7 +68,7 @@ export class ApiClient {
       body: JSON.stringify(request),
     })
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     return res.json() as Promise<SearchResponse>
@@ -81,7 +81,7 @@ export class ApiClient {
       body: JSON.stringify({ ...request, sessionId: this.sessionId }),
     })
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     return res.json() as Promise<GenerateResponse>
@@ -94,7 +94,7 @@ export class ApiClient {
       body: JSON.stringify({}),
     })
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     const session = await res.json() as SessionInfo
@@ -105,7 +105,7 @@ export class ApiClient {
   async getSession(sessionId: string): Promise<SessionInfo> {
     const res = await fetch(`${this.baseUrl}/sessions/${sessionId}`)
     if (!res.ok) {
-      const err: ApiError = await res.json().catch(() => ({ error: res.statusText }))
+      const err = await res.json().catch(() => ({ error: res.statusText })) as ApiError
       throw new Error(err.error || `HTTP ${res.status}`)
     }
     return res.json() as Promise<SessionInfo>

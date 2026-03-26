@@ -17,10 +17,10 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
     return errorResponse('Expected multipart/form-data', 400)
   }
 
-  const file = formData.get('file')
+  const file = formData.get('file') as File | string | null
   const sessionId = formData.get('sessionId') as string | null
 
-  if (!file || !(file instanceof File)) {
+  if (!file || typeof file === 'string') {
     return errorResponse('Missing file in form data', 400)
   }
 
@@ -65,6 +65,7 @@ export async function handleUpload(request: Request, env: Env): Promise<Response
     fileName: file.name,
     fileType,
     mimeType,
+    r2Key,
     openaiFileId,
     extractedText,
     uploadedAt: Date.now(),

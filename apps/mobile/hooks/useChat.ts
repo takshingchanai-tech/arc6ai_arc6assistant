@@ -85,5 +85,7 @@ export function useChat(apiUrl?: string) {
     clientRef.current = null
   }, [])
 
-  return { messages, isLoading, error, sendMessage, clearMessages }
+  const getSessionId = useCallback(() => clientRef.current?.getSessionId(), [])
+
+  return { messages, isLoading, error, sendMessage, clearMessages, getSessionId }
 }

@@ -83,7 +83,7 @@ The `/chat` route uses OpenAI function calling with two tools:
 Sessions stored in Cloudflare KV:
 - `session:{sessionId}` — metadata (title, messageCount, timestamps)
 - `history:{sessionId}` — conversation history (max 40 messages, 7-day TTL)
-- `file:{fileId}` — uploaded file metadata + openaiFileId or extractedText
+- `file:{fileId}` — uploaded file metadata + openaiFileId or extractedText or r2Key (for images)
 
 ### API Endpoints
 ```
@@ -123,6 +123,12 @@ arc6assistant/
 - `@electron-toolkit/utils` must be in `dependencies` (not devDependencies) — required at runtime by main process
 - File MIME type must be set explicitly in desktop renderer when creating File objects from IPC buffers
 - `electron-vite` requires `vite@^5` — do not upgrade to vite 6
+- `packages/shared/src/api/client.ts` — `res.json()` returns `Promise<unknown>`; cast with `as ApiError` not `const err: ApiError =`
+- `apps/backend/src/routes/upload.ts` — CF Workers types `FormData.get()` as `string | null`; cast to `File | string | null` and use `typeof` guard instead of `instanceof`
+- **Image vision was broken** — chat route only handled `openaiFileId` and `extractedText`; images (inline strategy) were silently dropped. Fix: store `r2Key` in `FileMeta`, fetch from R2 in chat route, inline as base64 `image_url` content part
+- **Mobile file upload sent empty Blob** — `chat.tsx` built FormData with real `{ uri, name, type }` ref but then ignored it and passed `new Blob([])` to `client.upload()`. Fix: use direct `fetch` with the FormData
+- **Mobile `sessionIdRef` never populated** — uploaded files had no session association. Fix: expose `getSessionId()` from `useChat`, pass result to upload FormData
+- **Mobile wrong default API URL** — `useSettings.ts` had `https://arc6assistant.workers.dev` (missing subdomain). Fix: `https://arc6assistant.takshingchanai.workers.dev`
 
 ## Code Conventions
 - Follow existing patterns in `arc6bot_basic` for any Worker changes
@@ -149,4 +155,5 @@ npx wrangler tail arc6assistant --format pretty
 # TypeScript check
 cd apps/backend && npx tsc --noEmit
 cd apps/desktop && npx tsc --noEmit
+cd apps/mobile && npx tsc --noEmit
 ```

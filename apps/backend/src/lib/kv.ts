@@ -60,6 +60,7 @@ export interface FileMeta {
   fileName: string
   fileType: string
   mimeType: string
+  r2Key?: string
   openaiFileId?: string
   extractedText?: string
   uploadedAt: number

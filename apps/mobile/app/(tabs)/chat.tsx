@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import {
   View,
   FlatList,
@@ -13,8 +13,7 @@ import * as DocumentPicker from 'expo-document-picker'
 import { useChat } from '../../hooks/useChat.js'
 import { ChatBubble } from '../../components/ChatBubble.js'
 import { MessageInput } from '../../components/MessageInput.js'
-import { ApiClient } from '@arc6assistant/shared'
-import type { AttachmentRef } from '@arc6assistant/shared'
+import type { AttachmentRef, UploadResponse } from '@arc6assistant/shared'
 import { useSettings } from '../../hooks/useSettings.js'
 
 interface PendingAttachment extends AttachmentRef {
@@ -23,11 +22,10 @@ interface PendingAttachment extends AttachmentRef {
 
 export default function ChatScreen(): JSX.Element {
   const { apiUrl } = useSettings()
-  const { messages, isLoading, error, sendMessage, clearMessages } = useChat(apiUrl)
+  const { messages, isLoading, error, sendMessage, clearMessages, getSessionId } = useChat(apiUrl)
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const sessionIdRef = useRef<string | undefined>(undefined)
 
   const handleFilePress = useCallback(async () => {
     const result = await DocumentPicker.getDocumentAsync({
@@ -48,18 +46,21 @@ export default function ChatScreen(): JSX.Element {
     setUploadError(null)
 
     try {
-      const client = new ApiClient(apiUrl, sessionIdRef.current)
       const formData = new FormData()
       formData.append('file', {
         uri: asset.uri,
         name: asset.name,
         type: asset.mimeType || 'application/octet-stream',
       } as unknown as Blob)
+      const sessionId = getSessionId()
+      if (sessionId) formData.append('sessionId', sessionId)
 
-      const uploadResult = await client.upload(
-        new Blob([], { type: asset.mimeType || 'application/octet-stream' }),
-        asset.name
-      )
+      const res = await fetch(`${apiUrl}/upload`, { method: 'POST', body: formData })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText })) as { error: string }
+        throw new Error(body.error || `Upload failed: ${res.status}`)
+      }
+      const uploadResult = await res.json() as UploadResponse
 
       setPendingAttachments((prev) => [
         ...prev,

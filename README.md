@@ -80,6 +80,16 @@ Or deploy manually:
 npm run deploy:backend
 ```
 
+## Distribution Status
+
+| App | Status | How |
+|-----|--------|-----|
+| Desktop | Not yet published | Needs GitHub Release via `electron-builder` + `GH_TOKEN` |
+| iOS | Not yet published | Needs EAS Build + App Store submission |
+| Android | Not yet published | Needs EAS Build + Google Play submission |
+
+See [`electron-builder.yml`](apps/desktop/electron-builder.yml) — desktop targets GitHub Releases at `arc6ai/arc6assistant`. Auto-updater (`electron-updater`) is already integrated and will push updates to installed clients once releases exist.
+
 ## Building for Distribution
 
 **Desktop:**
@@ -112,4 +122,4 @@ eas build --platform android
 
 ## License
 
-Proprietary — © 2025 Arc6AI. All rights reserved.
+Proprietary — © 2026 Arc6AI. All rights reserved.

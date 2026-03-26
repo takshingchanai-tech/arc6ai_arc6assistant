@@ -2,6 +2,7 @@ import type { Env, WireMessage } from '../types.js'
 import { CORS, errorResponse } from '../lib/cors.js'
 import { getHistory, saveHistory, getFileMeta, getSession, saveSession } from '../lib/kv.js'
 import { streamChat, chat, type ToolCall } from '../lib/openai.js'
+import { getFromR2 } from '../lib/r2.js'
 
 const SYSTEM_PROMPT = `You are Arc6 Assistant, a powerful AI assistant by Arc6AI.
 You help users analyze documents, search the web, and generate output files.
@@ -72,6 +73,14 @@ export async function handleChat(request: Request, env: Env, ctx: ExecutionConte
         contentParts.push({ type: 'file', file: { file_id: fileMeta.openaiFileId } })
       } else if (fileMeta.extractedText) {
         contentParts.push({ type: 'text', text: `\n[File: ${fileMeta.fileName}]\n${fileMeta.extractedText}` })
+      } else if (fileMeta.fileType === 'image' && fileMeta.r2Key) {
+        const obj = await getFromR2(env, fileMeta.r2Key)
+        if (obj) {
+          const bytes = await obj.arrayBuffer()
+          const b64 = btoa(String.fromCharCode(...new Uint8Array(bytes)))
+          const dataUrl = `data:${fileMeta.mimeType};base64,${b64}`
+          contentParts.push({ type: 'image_url', image_url: { url: dataUrl, detail: 'auto' } })
+        }
       }
     }
     enrichedUserMessage = { role: 'user', content: contentParts as never }
